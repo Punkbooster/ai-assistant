@@ -1,4 +1,6 @@
 .env
+gunicorn_start
 /run
 /logs
-gunicorn_start
+/.venv
+/__pycache__
