@@ -1,6 +1,6 @@
 #!/bin/bash
 
-NAME=ai-assistant
+NAME=ai-assistant-app
 DIR=/home/arsen/projects/ai-assistant
 USER=arsen
 GROUP=arsen
