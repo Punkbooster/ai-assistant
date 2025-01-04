@@ -5,6 +5,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 bearer_scheme = HTTPBearer()
 
+
 def verify_token(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     if token.credentials != AUTH_TOKEN:
         raise HTTPException(

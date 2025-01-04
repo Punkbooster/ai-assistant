@@ -9,13 +9,18 @@ from fastapi import FastAPI, Depends, HTTPException, status
 load_dotenv()
 openai_client = OpenAI()
 
+
 class Question(BaseModel):
     content: str
 
+
 app = FastAPI()
 
+
 @app.post("/answer")
-async def get_answer(question: Question, token: HTTPAuthorizationCredentials = Depends(verify_token)):
+async def get_answer(
+    question: Question, token: HTTPAuthorizationCredentials = Depends(verify_token)
+):
     try:
         content = question.content
 
@@ -26,6 +31,5 @@ async def get_answer(question: Question, token: HTTPAuthorizationCredentials = D
         return chat_completion
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
