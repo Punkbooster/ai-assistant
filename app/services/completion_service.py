@@ -1,7 +1,7 @@
-from openai import OpenAI
 from app.prompts import GRAMMA_PROMPT
+from openai import OpenAI
 
-def get_answer(content: str, openai_client: OpenAI):
+async def generate_completion(content: str, openai_client: OpenAI):
     result = openai_client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
