@@ -1,6 +1,9 @@
 import os
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+load_dotenv()
 
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 bearer_scheme = HTTPBearer()
