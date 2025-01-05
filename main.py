@@ -23,7 +23,7 @@ async def get_answer(
 
         all_messages = [
             {"role": "system", "content": GRAMMAR_PROMPT, "name": "Assistant"},
-            {"role": "user", "content": content, "name": "Arsen"},
+            {"role": "user", "content": content},
         ]
 
         main_completion = await ChatService.completion(all_messages, "gpt-4o-mini")
