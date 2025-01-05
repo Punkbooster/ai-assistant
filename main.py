@@ -1,13 +1,9 @@
-from dotenv import load_dotenv
-from openai import OpenAI
 from fastapi.security import HTTPAuthorizationCredentials
 from app.services.chat_service import ChatService
 from app.utils.auth_utils import verify_token
 from pydantic import BaseModel
 from prompts import GRAMMAR_PROMPT
 from fastapi import FastAPI, Depends, HTTPException, status
-
-load_dotenv()
 
 
 class Question(BaseModel):

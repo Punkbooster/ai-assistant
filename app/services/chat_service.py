@@ -1,8 +1,8 @@
 from app.services.openai_service import OpenAIService
 from typing import List, Dict, Any
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv("../../.env")
+load_dotenv(find_dotenv())
 
 
 class ChatService:
