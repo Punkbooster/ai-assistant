@@ -28,11 +28,12 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key
           chmod 600 private_key
-          scp -i private_key -o StrictHostKeyChecking=no -r . $VPS_USER@$VPS_HOST:/home/arsen/projects/ai-assistant
-          ssh -i private_key -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
+          scp -i private_key -P $SSH_PORT -o StrictHostKeyChecking=no -r . $VPS_USER@$VPS_HOST:/home/arsen/projects/ai-assistant
+          ssh -i private_key -p $SSH_PORT -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << 'EOF'
             cd /home/arsen/projects/ai-assistant
             source venv/bin/activate
             pip install -r requirements.txt
