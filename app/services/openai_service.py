@@ -1,5 +1,5 @@
-from openai import OpenAI
 from typing import Dict, Any
+from langfuse.openai import OpenAI
 
 
 class OpenAIService:
