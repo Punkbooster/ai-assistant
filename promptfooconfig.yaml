@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+
+# Learn more about building a configuration: https://promptfoo.dev/docs/configuration/guide
+
+description: "Main eval"
+
+prompts:
+  - file://./prompts/promptfoo/grammar_prompt.txt
+
+
+providers:
+  - id: openai:gpt-4o-mini
+    config:
+      temperature: 0.2
+      max_tokens: 1024
+  - id: openai:gpt-4o
+    config:
+      temperature: 0.2
+      max_tokens: 1024
+
+
+tests:
+  - vars:
+      input: Creat separate, yaml files that you want too combine
+    assert:
+      # For more information on assertions, see https://promptfoo.dev/docs/configuration/expected-outputs
+      - type: equals
+        value: Create separate YAML files that you want to combine.
+
+  - vars:
+      input: write a concis, funy twet about topic of Your choice.
+    assert:
+      - type: equals
+        value: Write a concise, funny tweet about a topic of your choice.

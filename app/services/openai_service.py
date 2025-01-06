@@ -11,6 +11,7 @@ class OpenAIService:
         model = config.get("model", "gpt-4o-mini")
         stream = config.get("stream", False)
         json_mode = config.get("jsonMode", False)
+        temperature = config.get("temperature", 0.2)
 
         response_format = {"type": "json_object"} if json_mode else {"type": "text"}
 
@@ -19,4 +20,5 @@ class OpenAIService:
             model=model,
             stream=stream,
             response_format=response_format,
+            temperature=temperature,
         )
