@@ -9,4 +9,5 @@ gunicorn_start
 /app/utils/__pycache__
 /.git
 /.github
-/prompts/__pycache__
+/app/prompts/__pycache__
+/app/__pycache__
