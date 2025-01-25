@@ -64,15 +64,17 @@ class Agent:
                 "query": "Precise description of what needs to be done, including any necessary context"
             }}
 
-            If you have sufficient information to provide a final answer or need user input, use the "final_answer" tool."""
+            If you have sufficient information to provide a final answer or need user input, use the "final_answer" tool.""",
         }
 
-        answer = await self.openai_service.completion({
-            "messages": [system_message],
-            "model": "gpt-4o",
-            "stream": False,
-            "jsonMode": True,
-        })
+        answer = await self.openai_service.completion(
+            {
+                "messages": [system_message],
+                "model": "gpt-4o",
+                "stream": False,
+                "jsonMode": True,
+            }
+        )
 
         result = json.loads(answer.choices[0].message.content or "{}")
         return result if "tool" in result else None
@@ -96,46 +98,62 @@ class Agent:
 
             Respond with ONLY a JSON object matching the tool's parameter structure.
             Example for web_search: {{"query": "specific search query"}}
-            Example for final_answer: {{"answer": "detailed response"}}"""
+            Example for final_answer: {{"answer": "detailed response"}}""",
         }
 
-        answer = await self.openai_service.completion({
-            "messages": [system_message],
-            "model": "gpt-4o",
-            "stream": False,
-            "jsonMode": True,
-        })
+        answer = await self.openai_service.completion(
+            {
+                "messages": [system_message],
+                "model": "gpt-4o",
+                "stream": False,
+                "jsonMode": True,
+            }
+        )
 
         return json.loads(answer.choices[0].message.content or "{}")
 
     async def use_tool(self, tool, parameters, conversation_uuid):
         if tool == "web_search":
-            results = await self.web_search_service.search(parameters["query"], conversation_uuid)
+            results = await self.web_search_service.search(
+                parameters["query"], conversation_uuid
+            )
 
-            self.state["documents"].extend([r for r in results if r["metadata"]["content_type"] != "chunk"])
-            self.state["actions"].append({
-                "uuid": str(uuid.uuid4()),
-                "name": tool,
-                "parameters": json.dumps(parameters),
-                "description": f'Search results & website contents for the query {parameters["query"]}',
-                "results": results,
-                "tool_uuid": tool,
-            })
+            self.state["documents"].extend(
+                [r for r in results if r["metadata"]["content_type"] != "chunk"]
+            )
+            self.state["actions"].append(
+                {
+                    "uuid": str(uuid.uuid4()),
+                    "name": tool,
+                    "parameters": json.dumps(parameters),
+                    "description": f'Search results & website contents for the query {parameters["query"]}',
+                    "results": results,
+                    "tool_uuid": tool,
+                }
+            )
 
     async def generate_answer(self):
-        context = [result for action in self.state["actions"] for result in action["results"]]
-        query = self.state["config"]["active_step"]["query"] if self.state["config"]["active_step"] else None
+        context = [
+            result for action in self.state["actions"] for result in action["results"]
+        ]
+        query = (
+            self.state["config"]["active_step"]["query"]
+            if self.state["config"]["active_step"]
+            else None
+        )
 
-        answer = await self.openai_service.completion({
-            "messages": [
-                {
-                    "role": "system",
-                    "content": answer_prompt(context, query),
-                },
-                *self.state["messages"],
-            ],
-            "model": "gpt-4o-mini",
-            "stream": False,
-        })
+        answer = await self.openai_service.completion(
+            {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": answer_prompt(context, query),
+                    },
+                    *self.state["messages"],
+                ],
+                "model": "gpt-4o-mini",
+                "stream": False,
+            }
+        )
 
         return answer

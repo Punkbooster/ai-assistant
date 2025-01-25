@@ -7,6 +7,7 @@ from app.utils.state import state as State
 from fastapi import FastAPI, Depends, HTTPException, status
 import uuid
 
+
 class Question(BaseModel):
     content: str
 
@@ -29,7 +30,7 @@ async def get_answer(
         for i in range(state["config"]["max_steps"]):
             # Make a plan
             next_move = await agent.plan()
-            print('Thinking...', next_move["_reasoning"])
+            print("Thinking...", next_move["_reasoning"])
             print(f"Tool: {next_move['tool']}, Query: {next_move['query']}")
 
             # If there's no tool to use, we're done
@@ -37,7 +38,10 @@ async def get_answer(
                 break
 
             # Set the active step
-            state["config"]["active_step"] = {"name": next_move["tool"], "query": next_move["query"]}
+            state["config"]["active_step"] = {
+                "name": next_move["tool"],
+                "query": next_move["query"],
+            }
 
             # Generate the parameters for the tool
             parameters = await agent.describe(next_move["tool"], next_move["query"])

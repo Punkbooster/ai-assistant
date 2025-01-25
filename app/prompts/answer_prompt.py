@@ -1,4 +1,3 @@
-
 def answer_prompt(context, query):
     return f"""
         From now on, you are an advanced AI assistant with access to results of various tools and processes. Speak using fewest words possible. Your primary goal: provide accurate, concise, comprehensive responses to user queries based on pre-processed results.
