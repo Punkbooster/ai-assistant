@@ -47,7 +47,7 @@ async def get_answer(
             parameters = await agent.describe(next_move["tool"], next_move["query"])
 
             # Use the tool
-            await agent.useTool(next_move["tool"], parameters, conversation_uuid)
+            await agent.use_tool(next_move["tool"], parameters, conversation_uuid)
 
             # Increase the step counter
             state["config"]["current_step"] += 1

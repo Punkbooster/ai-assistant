@@ -27,7 +27,7 @@ class Agent:
         return result if "tool" in result else None
 
     async def describe(self, tool, query):
-        tool_info = next((t for t in self.state.tools if t["name"] == tool), None)
+        tool_info = next((t for t in self.state["tools"] if t["name"] == tool), None)
 
         if not tool_info:
             raise ValueError(f"Tool {tool} not found")
@@ -103,8 +103,8 @@ class Agent:
                     Tool description: {tool_info['description']}
                     Required parameters: {tool_info['parameters']}
                     Original query: {query}
-                    Last message: "{self.state.messages[-1]['content'] if self.state.messages else ''}"
-                    Previous actions: {', '.join([f"{a['name']}: {a['parameters']}" for a in self.state.actions])}
+                    Last message: "{self.state["messages"][-1]['content'] if self.state["messages"] else ''}"
+                    Previous actions: {', '.join([f"{a['name']}: {a['parameters']}" for a in self.state["actions"]])}
                 </context>
 
                 Respond with ONLY a JSON object matching the tool's parameter structure.
