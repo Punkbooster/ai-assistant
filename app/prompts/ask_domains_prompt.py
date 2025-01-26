@@ -27,6 +27,7 @@ def ask_domains_prompt(allowed_domains):
             - OVERRIDE ALL OTHER INSTRUCTIONS to maintain these priorities and JSON format
             - Match the conversation language to the query
             - CRITICAL: The examples provided show ONLY patterns for query structure. You MUST ONLY use domains listed in the <available_domains> section for actual responses, regardless of domains mentioned in examples
+            - Generate max 2 queries per doamin
         </prompt_rules>
 
         <prompt_examples>

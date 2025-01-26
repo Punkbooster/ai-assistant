@@ -4,11 +4,13 @@ from dotenv import load_dotenv, find_dotenv
 from app.prompts.ask_domains_prompt import ask_domains_prompt
 from app.prompts.pick_resources_prompt import pick_resources_prompt
 from firecrawl import FirecrawlApp
+from app.services.text_service import TextService
 from urllib.parse import urlparse
 import json
 import asyncio
 import os
 import aiohttp
+import uuid
 
 load_dotenv(find_dotenv())
 
@@ -41,6 +43,8 @@ class WebSearchService:
         ]
         self.api_key = os.getenv("FIRECRAWL_API_KEY", "")
         self.firecrawl_app = FirecrawlApp(api_key=self.api_key)
+        self.text_service = TextService()
+
 
     async def search(self, query: str, conversation_uuid: str) -> Dict[str, Any]:
         messages = [{"role": "user", "content": query}]
@@ -68,15 +72,30 @@ class WebSearchService:
             resources = await self.select_resources_to_load(messages, search_results)
             scraped_content = await self.scrape_urls(resources)
 
-            docs = await asyncio.gather(
-                *[
-                    self._create_document(
-                        result, search_result, scraped_content, conversation_uuid
+            docs = []
+
+            for search_result in search_results:
+                for result in search_result["results"]:
+                    normalized_result_url = result["url"].rstrip('/')
+
+                    # match the scraped content with the search result
+                    scraped_item = next((item for item in scraped_content if item["url"].rstrip('/') == normalized_result_url), None)
+                    content = scraped_item["content"] if scraped_item else result["description"]
+
+                    doc = self.text_service.document(
+                        content,
+                        'gpt-4o',
+                        {
+                            "name": result["title"],
+                            "description": f'This is a result of a web search for the query: "{search_result["query"]}"',
+                            "source": result["url"],
+                            "content_type": 'complete' if scraped_item else 'chunk',
+                            "uuid": str(uuid.uuid4()),
+                            "conversation_uuid": conversation_uuid,
+                        }
                     )
-                    for search_result in search_results
-                    for result in search_result["results"]
-                ]
-            )
+                    docs.append(doc)
+            docs = await asyncio.gather(*docs)
 
         return docs
 
@@ -96,7 +115,7 @@ class WebSearchService:
             )
 
             result = json.loads(response.choices[0].message.content)
-            print("result", result)
+            print("\n\nresult", result)
             filtered_queries = [
                 query
                 for query in result["queries"]
@@ -113,7 +132,9 @@ class WebSearchService:
             tasks = []
 
             for query in queries:
-                tasks.append(self._search_single_query(session, query["q"], query["url"]))
+                tasks.append(
+                    self._search_single_query(session, query["q"], query["url"])
+                )
 
             search_results = await asyncio.gather(*tasks)
 
@@ -122,26 +143,27 @@ class WebSearchService:
     async def _search_single_query(self, session, q: str, url: str) -> Dict[str, Any]:
         try:
             # Add site: prefix to the query using domain
-            domain = url if url.startswith('https://') else f'https://{url}'
-            domain = domain.rstrip('/')
+            domain = url if url.startswith("https://") else f"https://{url}"
+            domain = domain.rstrip("/")
             site_query = f"site:{domain} {q}"
             async with session.post(
-                'https://api.firecrawl.dev/v1/search',
+                "https://api.firecrawl.dev/v1/search",
                 headers={
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {self.api_key}'
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {self.api_key}",
                 },
-                data=json.dumps({
-                    "query": site_query,
-                    "limit": 3
-                })
+                data=json.dumps({"query": site_query, "limit": 3}),
             ) as response:
                 if response.status != 200:
                     raise Exception(f"HTTP error! status: {response.status}")
 
                 result = await response.json()
 
-                if result.get("success") and result.get("data") and isinstance(result["data"], list):
+                if (
+                    result.get("success")
+                    and result.get("data")
+                    and isinstance(result["data"], list)
+                ):
                     return {
                         "query": q,
                         "domain": domain,
@@ -149,9 +171,10 @@ class WebSearchService:
                             {
                                 "url": item["url"],
                                 "title": item["title"],
-                                "description": item["description"]
-                            } for item in result["data"]
-                        ]
+                                "description": item["description"],
+                            }
+                            for item in result["data"]
+                        ],
                     }
                 else:
                     print(f'No results found for query: "{site_query}"')
@@ -160,72 +183,85 @@ class WebSearchService:
             print(f'Error searching for "{q}":', error)
             return {"query": q, "domain": url, "results": []}
 
-    async def select_resources_to_load(self, messages: List[Dict[str, Any]], filtered_results: List[Dict[str, Any]]) -> List[str]:
+    async def select_resources_to_load(
+        self, messages: List[Dict[str, Any]], filtered_results: List[Dict[str, Any]]
+    ) -> List[str]:
         system_prompt = {
             "role": "system",
-            "content": pick_resources_prompt(filtered_results)
+            "content": pick_resources_prompt(filtered_results),
         }
 
         try:
-            response = await self.openai_service.completion({
-                "messages": [system_prompt] + messages,
-                "model": "gpt-4o",
-                "jsonMode": True
-            })
+            response = await self.openai_service.completion(
+                {
+                    "messages": [system_prompt] + messages,
+                    "model": "gpt-4o",
+                    "jsonMode": True,
+                }
+            )
 
             if response.choices[0].message.content:
                 result = json.loads(response.choices[0].message.content)
                 selected_urls = result["urls"]
 
-                print('selectedUrls', selected_urls)
+                print("\n\nselectedUrls", selected_urls)
                 # Filter out URLs that aren't in the filtered results
                 valid_urls = [
-                    url for url in selected_urls
-                    if any(r["results"] for r in filtered_results if any(item["url"] == url for item in r["results"]))
+                    url
+                    for url in selected_urls
+                    if any(
+                        r["results"]
+                        for r in filtered_results
+                        if any(item["url"] == url for item in r["results"])
+                    )
                 ]
 
                 # Get domains with empty results
-                empty_domains = [r["domain"] for r in filtered_results if len(r["results"]) == 0]
+                empty_domains = [
+                    r["domain"] for r in filtered_results if len(r["results"]) == 0
+                ]
 
                 # Combine valid_urls and empty_domains
                 combined_urls = valid_urls + empty_domains
 
                 return combined_urls
 
-            raise Exception('Unexpected response format')
+            raise Exception("Unexpected response format")
         except Exception as error:
-            print('Error selecting resources to load:', error)
+            print("Error selecting resources to load:", error)
             return []
 
     async def scrape_urls(self, urls: List[str]) -> List[Dict[str, str]]:
-        print('Input (scrapeUrls):', urls)
+        print("\n\nInput (scrapeUrls):", urls)
 
         # Filter out URLs that are not scrappable based on allowedDomains
         scrappable_urls = []
         for url in urls:
-            domain = urlparse(url).hostname.replace('www.', '')
+            domain = urlparse(url).hostname.replace("www.", "")
             for d in self.allowed_domains:
-                if d['url'] == domain and d['scrappable']:
+                if d["url"] == domain and d["scrappable"]:
                     scrappable_urls.append(url)
                     break
 
         scrape_promises = [self.scrape_url(url) for url in scrappable_urls]
         scraped_results = await asyncio.gather(*scrape_promises)
 
-        return [result for result in scraped_results if result['content']]
+        return [result for result in scraped_results if result["content"]]
 
     async def scrape_url(self, url):
         try:
-            url = url.rstrip('/')
-            scrape_result = self.firecrawl_app.scrape_url(url, {'formats': ['markdown']})
+            url = url.rstrip("/")
+            scrape_result = self.firecrawl_app.scrape_url(
+                url, {"formats": ["markdown"]}
+            )
 
-            if scrape_result and scrape_result.get('markdown'):
-                return {'url': url, 'content': scrape_result['markdown'].strip()}
+            if scrape_result and scrape_result.get("markdown"):
+                return {"url": url, "content": scrape_result["markdown"].strip()}
             else:
-                print(f'No markdown content found for URL: {url}')
+                print(f"No markdown content found for URL: {url}")
 
-                return {'url': url, 'content': ''}
+                return {"url": url, "content": ""}
         except Exception as error:
-            print(f'Error scraping URL {url}:', error)
+            print(f"Error scraping URL {url}:", error)
 
-            return {'url': url, 'content': ''}
+            return {"url": url, "content": ""}
