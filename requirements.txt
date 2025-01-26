@@ -6,3 +6,5 @@ openai
 pydantic
 langfuse
 black
+aiohttp
+firecrawl-py
