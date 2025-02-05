@@ -4,6 +4,7 @@ from app.utils.auth_utils import verify_token
 from pydantic import BaseModel
 from app.services.agent_service import Agent
 from app.utils.state import state as State
+from app.prompts.grammar_prompt import GRAMMAR_PROMPT
 from fastapi import FastAPI, Depends, HTTPException, status
 import uuid
 
@@ -57,6 +58,28 @@ async def get_answer(
         state["messages"].append(answer.choices[0].message.content)
 
         return state["messages"][-1]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+@app.post("/grammar")
+async def fix_grammar(
+    question: Question, token: HTTPAuthorizationCredentials = Depends(verify_token)
+):
+    try:
+        content = question.content
+
+        all_messages = [
+            {"role": "system", "content": GRAMMAR_PROMPT, "name": "Assistant"},
+            {"role": "user", "content": content},
+        ]
+
+        main_completion = await ChatService.completion(all_messages, "gpt-4o-mini")
+
+        main_message = main_completion.choices[0].message.content
+
+        return main_message
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
