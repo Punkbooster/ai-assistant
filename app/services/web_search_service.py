@@ -45,7 +45,6 @@ class WebSearchService:
         self.firecrawl_app = FirecrawlApp(api_key=self.api_key)
         self.text_service = TextService()
 
-
     async def search(self, query: str, conversation_uuid: str) -> Dict[str, Any]:
         messages = [{"role": "user", "content": query}]
 
@@ -76,23 +75,34 @@ class WebSearchService:
 
             for search_result in search_results:
                 for result in search_result["results"]:
-                    normalized_result_url = result["url"].rstrip('/')
+                    normalized_result_url = result["url"].rstrip("/")
 
                     # match the scraped content with the search result
-                    scraped_item = next((item for item in scraped_content if item["url"].rstrip('/') == normalized_result_url), None)
-                    content = scraped_item["content"] if scraped_item else result["description"]
+                    scraped_item = next(
+                        (
+                            item
+                            for item in scraped_content
+                            if item["url"].rstrip("/") == normalized_result_url
+                        ),
+                        None,
+                    )
+                    content = (
+                        scraped_item["content"]
+                        if scraped_item
+                        else result["description"]
+                    )
 
                     doc = self.text_service.document(
                         content,
-                        'gpt-4o',
+                        "gpt-4o",
                         {
                             "name": result["title"],
                             "description": f'This is a result of a web search for the query: "{search_result["query"]}"',
                             "source": result["url"],
-                            "content_type": 'complete' if scraped_item else 'chunk',
+                            "content_type": "complete" if scraped_item else "chunk",
                             "uuid": str(uuid.uuid4()),
                             "conversation_uuid": conversation_uuid,
-                        }
+                        },
                     )
                     docs.append(doc)
             docs = await asyncio.gather(*docs)

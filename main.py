@@ -36,6 +36,7 @@ async def get_answer(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
+
 @app.post("/grammar")
 async def grammar(
     question: Question, token: HTTPAuthorizationCredentials = Depends(verify_token)

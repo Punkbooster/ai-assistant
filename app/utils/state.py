@@ -10,7 +10,7 @@ state = {
             "uuid": str(uuid.uuid4()),
             "name": "web_search",
             "description": "Use this to search the web for external information",
-            "instruction": web_prompt,
+            "instruction": web_prompt(),
             "parameters": json.dumps(
                 {
                     "query": "Command to the web search tool, including the search query and all important details, keywords and urls from the available context"

@@ -5,7 +5,7 @@
 description: "Main eval"
 
 prompts:
-  - file://./prompts/promptfoo/grammar_prompt.txt
+  - file://./app/prompts/promptfoo/grammar_prompt.txt
 
 
 providers:

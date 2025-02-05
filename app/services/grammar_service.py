@@ -1,10 +1,11 @@
 from fastapi import HTTPException, status
-from app.prompts.grammar_prompt import GRAMMAR_PROMPT
+from app.prompts.grammar_prompt import grammar_prompt
+
 
 async def fix_grammar(ChatService, question_content: str) -> str:
     try:
         all_messages = [
-            {"role": "system", "content": GRAMMAR_PROMPT, "name": "Assistant"},
+            {"role": "system", "content": grammar_prompt(), "name": "Assistant"},
             {"role": "user", "content": question_content},
         ]
 
