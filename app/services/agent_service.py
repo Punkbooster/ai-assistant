@@ -11,6 +11,38 @@ class Agent:
         self.web_search_service = WebSearchService()
         self.state = state
 
+    async def process_agent_steps(self, state, conversation_uuid):
+        for i in range(state["config"]["max_steps"]):
+            # Make a plan
+            next_move = await self.plan()
+            print("Thinking...", next_move["_reasoning"])
+            print(f"Tool: {next_move['tool']}, Query: {next_move['query']}")
+
+            # If there's no tool to use, we're done
+            if not next_move["tool"] or next_move["tool"] == "final_answer":
+                break
+
+            # Set the active step
+            state["config"]["active_step"] = {
+                "name": next_move["tool"],
+                "query": next_move["query"],
+            }
+
+            # Generate the parameters for the tool
+            parameters = await self.describe(next_move["tool"], next_move["query"])
+
+            # Use the tool
+            await self.use_tool(next_move["tool"], parameters, conversation_uuid)
+
+            # Increase the step counter
+            state["config"]["current_step"] += 1
+
+        # Generate the final answer
+        answer = await self.generate_answer()
+        state["messages"].append(answer.choices[0].message.content)
+
+        return state["messages"][-1]
+
     async def plan(self):
         system_message = self._generate_plan_system_message()
 
