@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from app.services.agent_service import Agent
 from app.utils.state import state as State
 from app.services.grammar_service import fix_grammar
+from langfuse import Langfuse
 from fastapi import FastAPI, Depends, HTTPException, status
 import uuid
 
@@ -15,6 +16,7 @@ class Question(BaseModel):
 
 app = FastAPI()
 ChatService = ChatService()
+langfuse = Langfuse()
 
 
 @app.post("/answer")
