@@ -24,13 +24,12 @@ async def get_answer(
     question: Question, token: HTTPAuthorizationCredentials = Depends(verify_token)
 ):
     try:
-        conversation_uuid = uuid.uuid4()
         state = State
         state["messages"].append({"role": "user", "content": question.content})
 
         agent = Agent(state)
 
-        final_answer = await agent.process_agent_steps(state, conversation_uuid)
+        final_answer = await agent.process_agent_steps(state)
 
         return final_answer
     except Exception as e:

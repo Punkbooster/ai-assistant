@@ -16,7 +16,7 @@ load_dotenv(find_dotenv())
 
 
 class WebSearchService:
-    def __init__(self):
+    def __init__(self, conversation_uuid: str):
         self.openai_service = OpenAIService()
         self.allowed_domains = [
             {"name": "Wikipedia", "url": "wikipedia.org", "scrappable": True},
@@ -44,8 +44,9 @@ class WebSearchService:
         self.api_key = os.getenv("FIRECRAWL_API_KEY", "")
         self.firecrawl_app = FirecrawlApp(api_key=self.api_key)
         self.text_service = TextService()
+        self.conversation_uuid = conversation_uuid
 
-    async def search(self, query: str, conversation_uuid: str) -> Dict[str, Any]:
+    async def search(self, query: str) -> Dict[str, Any]:
         messages = [{"role": "user", "content": query}]
 
         queries = (await self.generate_queries(messages))["queries"]
@@ -101,7 +102,7 @@ class WebSearchService:
                             "source": result["url"],
                             "content_type": "complete" if scraped_item else "chunk",
                             "uuid": str(uuid.uuid4()),
-                            "conversation_uuid": conversation_uuid,
+                            "conversation_uuid": self.conversation_uuid,
                         },
                     )
                     docs.append(doc)
@@ -121,6 +122,7 @@ class WebSearchService:
                     "messages": [system_prompt] + messages,
                     "model": "gpt-4o",
                     "jsonMode": True,
+                    "conversation_uuid": self.conversation_uuid,
                 }
             )
 
@@ -207,6 +209,7 @@ class WebSearchService:
                     "messages": [system_prompt] + messages,
                     "model": "gpt-4o",
                     "jsonMode": True,
+                    "conversation_uuid": self.conversation_uuid,
                 }
             )
 

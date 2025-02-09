@@ -8,10 +8,10 @@ from app.prompts.answer_prompt import answer_prompt
 class Agent:
     def __init__(self, state):
         self.openai_service = OpenAIService()
-        self.web_search_service = WebSearchService()
+        self.web_search_service = WebSearchService(state["conversation_uuid"])
         self.state = state
 
-    async def process_agent_steps(self, state, conversation_uuid):
+    async def process_agent_steps(self, state):
         for i in range(state["config"]["max_steps"]):
             # Make a plan
             next_move = await self.plan()
@@ -32,7 +32,7 @@ class Agent:
             parameters = await self.describe(next_move["tool"], next_move["query"])
 
             # Use the tool
-            await self.use_tool(next_move["tool"], parameters, conversation_uuid)
+            await self.use_tool(next_move["tool"], parameters)
 
             # Increase the step counter
             state["config"]["current_step"] += 1
@@ -52,6 +52,7 @@ class Agent:
                 "model": "gpt-4o",
                 "stream": False,
                 "jsonMode": True,
+                "conversation_uuid": self.state["conversation_uuid"],
             }
         )
 
@@ -72,15 +73,16 @@ class Agent:
                 "model": "gpt-4o",
                 "stream": False,
                 "jsonMode": True,
+                "conversation_uuid": self.state["conversation_uuid"],
             }
         )
 
         return json.loads(answer.choices[0].message.content or "{}")
 
-    async def use_tool(self, tool, parameters, conversation_uuid):
+    async def use_tool(self, tool, parameters):
         if tool == "web_search":
             results = await self.web_search_service.search(
-                parameters["query"], conversation_uuid
+                parameters["query"]
             )
 
             self.state["documents"].extend(
@@ -121,6 +123,7 @@ class Agent:
                 ],
                 "model": "gpt-4o-mini",
                 "stream": False,
+                "conversation_uuid": self.state["conversation_uuid"],
             }
         )
 

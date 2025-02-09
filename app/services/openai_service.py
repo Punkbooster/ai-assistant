@@ -12,6 +12,7 @@ class OpenAIService:
         stream = config.get("stream", False)
         json_mode = config.get("jsonMode", False)
         temperature = config.get("temperature", 0.2)
+        session_id = config.get("conversation_uuid")
 
         response_format = {"type": "json_object"} if json_mode else {"type": "text"}
 
@@ -21,4 +22,5 @@ class OpenAIService:
             stream=stream,
             response_format=response_format,
             temperature=temperature,
+            session_id=session_id,
         )
