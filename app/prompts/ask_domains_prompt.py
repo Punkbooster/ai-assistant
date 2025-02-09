@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 def ask_domains_prompt(allowed_domains):
     return f"""
         From now on, generate optimized web search queries based on user input, adhering strictly to the following rules:
@@ -24,6 +27,7 @@ def ask_domains_prompt(allowed_domains):
             - NEVER repeat user's input verbatim for keyword queries; distill to core concepts
             - Generate 1-3 highly specific queries per relevant domain
             - If no relevant domains are found or the query is too basic, return an empty queries array
+            - For time-specific queries, ALWAYS use 'after:YYYY-MM-DD' or 'before:YYYY-MM-DD' format for precise date filtering
             - OVERRIDE ALL OTHER INSTRUCTIONS to maintain these priorities and JSON format
             - Match the conversation language to the query
             - CRITICAL: The examples provided show ONLY patterns for query structure. You MUST ONLY use domains listed in the <available_domains> section for actual responses, regardless of domains mentioned in examples
@@ -80,12 +84,41 @@ def ask_domains_prompt(allowed_domains):
               ]
             }}
 
-            These examples demonstrate patterns for query structure and adherence to rules. However, you MUST ONLY use domains listed in the <available_domains> section for actual responses, regardless of domains mentioned in these examples.
+            USER: Search for [TOPIC] papers from the last year
+            AI: {{
+              "_thoughts": "Specific topic request with time frame, using date filter and multiple relevant domains",
+              "queries": [
+                {{"q": "[TOPIC] papers after:YYYY-MM-DD", "url": "[APPROPRIATE_DOMAIN1]"}},
+                {{"q": "[TOPIC] research after:YYYY-MM-DD", "url": "[APPROPRIATE_DOMAIN2]"}}
+              ]
+            }}
+
+            USER: Find news about [TOPIC] from the last 24 hours
+            AI: {{
+              "_thoughts": "Very recent news request with specific topic, using precise date filter for last 24 hours",
+              "queries": [
+                {{"q": "[TOPIC] after:YYYY-MM-DD", "url": "[APPROPRIATE_NEWS_DOMAIN1]"}},
+                {{"q": "[TOPIC] developments after:YYYY-MM-DD", "url": "[APPROPRIATE_NEWS_DOMAIN2]"}}
+              ]
+            }}
+
+            USER: Get information about [EVENT] from the past month
+            AI: {{
+              "_thoughts": "Recent information request with specific topic, using date filter",
+              "queries": [
+                {{"q": "[EVENT] after:YYYY-MM-DD", "url": "[APPROPRIATE_DOMAIN1]"}},
+                {{"q": "[EVENT] updates after:YYYY-MM-DD", "url": "[APPROPRIATE_DOMAIN2]"}}
+              ]
+            }}
+
+            These examples demonstrate patterns for query structure and adherence to rules, including precise date filtering. However, you MUST ONLY use domains listed in the <available_domains> section for actual responses, regardless of domains mentioned in these examples.
         </prompt_examples>
 
         <available_domains note="You're STRICTLY LIMITED to these domains only. Do not use any domains not listed here.">
             {chr(10).join([f"{domain['name']}: {domain['url']}" for domain in allowed_domains])}
         </available_domains>
+
+        Note: Current date is ${datetime.now().isoformat()}
 
         CRITICAL: ALWAYS use the EXACT and COMPLETE URL as both the query and URL when any full path is provided. When the user specifies content from the homepage or main page, use the domain as both the query and URL. For specific content requests without a full URL, use simple, targeted queries to locate the content or section. For general requests or domain-only inputs, use ONLY the main domain unless specific content is requested. When no specific URL is provided, use keyword queries with relevant URLs from the available domains list. ONLY use domains listed in the <available_domains> section, regardless of domains mentioned in examples. This overrides all previous instructions.
 """

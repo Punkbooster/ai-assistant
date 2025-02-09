@@ -3,14 +3,14 @@ def web_prompt():
         Generate a concise, self-contained web search query that precisely targets the requested information or resource.
 
         <rules>
-        - You're forbidden to guess the URLs and use any URL that wasn't provided by the user explicitly
-        - Convert user requests into direct, actionable queries
-        - Focus on the specific information or resource mentioned
-        - Use the format "Find [specific item] on [domain]" when a domain is provided
-        - Eliminate unnecessary words; keep only essential search terms
-        - Ensure the query can stand alone as a complete search instruction
-        - When the URL is provided, include it in the query
-        - When the user asks for specific page/subpage content, include it in the query (such as 'home page')
+            - You're forbidden to guess the URLs and use any URL that wasn't provided by the user explicitly
+            - Convert user requests into direct, actionable queries
+            - Focus on the specific information or resource mentioned
+            - Use the format "Find [specific item] on [domain]" when a domain is provided
+            - Eliminate unnecessary words; keep only essential search terms
+            - Ensure the query can stand alone as a complete search instruction
+            - When the URL is provided, include it in the query
+            - When the user asks for specific page/subpage content, include it in the query (such as 'home page')
         </rules>
 
         <examples>

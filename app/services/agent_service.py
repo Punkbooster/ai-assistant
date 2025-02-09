@@ -3,6 +3,7 @@ import json
 from app.services.openai_service import OpenAIService
 from app.services.web_search_service import WebSearchService
 from app.prompts.answer_prompt import answer_prompt
+from datetime import datetime
 
 
 class Agent:
@@ -81,9 +82,7 @@ class Agent:
 
     async def use_tool(self, tool, parameters):
         if tool == "web_search":
-            results = await self.web_search_service.search(
-                parameters["query"]
-            )
+            results = await self.web_search_service.search(parameters["query"])
 
             self.state["documents"].extend(
                 [r for r in results if r["metadata"]["content_type"] != "chunk"]
@@ -135,6 +134,9 @@ class Agent:
             "content": f"""
                 Generate specific parameters for the "{tool_info['name']}" tool.
                 <context>
+                    <current_date>
+                        Current date: ${datetime.now().isoformat()}
+                    </current_date>
                     Tool description: {tool_info['description']}
                     Required parameters: {tool_info['parameters']}
                     Original query: {query}
@@ -174,6 +176,7 @@ class Agent:
                 </prompt_rules>
 
                 <context>
+                    <current_date>Current date: ${datetime.now().isoformat()}</current_date>
                     <last_message>
                         Last message: "{self.state["messages"][-1]["content"] if self.state["messages"] else 'No messages yet'}"
                     </last_message>

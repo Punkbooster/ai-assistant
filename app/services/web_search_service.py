@@ -23,7 +23,6 @@ class WebSearchService:
             {"name": "easycart", "url": "easy.tools", "scrappable": True},
             {"name": "FS.blog", "url": "fs.blog", "scrappable": True},
             {"name": "arXiv", "url": "arxiv.org", "scrappable": True},
-            {"name": "Instagram", "url": "instagram.com", "scrappable": False},
             {"name": "OpenAI", "url": "openai.com", "scrappable": True},
             {"name": "Brain overment", "url": "brain.overment.com", "scrappable": True},
             {"name": "Reuters", "url": "reuters.com", "scrappable": True},
