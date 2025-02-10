@@ -3,6 +3,7 @@ from typing import List, Dict, Any
 from dotenv import load_dotenv, find_dotenv
 from app.prompts.ask_domains_prompt import ask_domains_prompt
 from app.prompts.pick_resources_prompt import pick_resources_prompt
+from app.utils.allowed_domains import ALLOWED_DOMAINS as allowed_domains
 from firecrawl import FirecrawlApp
 from app.services.text_service import TextService
 from urllib.parse import urlparse
@@ -18,28 +19,7 @@ load_dotenv(find_dotenv())
 class WebSearchService:
     def __init__(self, conversation_uuid: str):
         self.openai_service = OpenAIService()
-        self.allowed_domains = [
-            {"name": "Wikipedia", "url": "wikipedia.org", "scrappable": True},
-            {"name": "easycart", "url": "easy.tools", "scrappable": True},
-            {"name": "FS.blog", "url": "fs.blog", "scrappable": True},
-            {"name": "arXiv", "url": "arxiv.org", "scrappable": True},
-            {"name": "OpenAI", "url": "openai.com", "scrappable": True},
-            {"name": "Brain overment", "url": "brain.overment.com", "scrappable": True},
-            {"name": "Reuters", "url": "reuters.com", "scrappable": True},
-            {
-                "name": "MIT Technology Review",
-                "url": "technologyreview.com",
-                "scrappable": True,
-            },
-            {"name": "Youtube", "url": "youtube.com", "scrappable": False},
-            {"name": "overment", "url": "brain.overment.com", "scrappable": True},
-            {"name": "Tailwind CSS", "url": "tailwindcss.com", "scrappable": True},
-            {"name": "IMDB", "url": "imdb.com", "scrappable": True},
-            {"name": "TechCrunch", "url": "techcrunch.com", "scrappable": True},
-            {"name": "Hacker", "url": "news.ycombinator.com", "scrappable": True},
-            {"name": "Anthropic", "url": "anthropic.com", "scrappable": True},
-            {"name": "DeepMind Press", "url": "deepmind.google", "scrappable": True},
-        ]
+        self.allowed_domains = allowed_domains
         self.api_key = os.getenv("FIRECRAWL_API_KEY", "")
         self.firecrawl_app = FirecrawlApp(api_key=self.api_key)
         self.text_service = TextService()
@@ -62,7 +42,7 @@ class WebSearchService:
         if len(queries) > 0:
             search_results = await self.search_web(queries)
             print(
-                "searchResults",
+                "Search Results:",
                 [
                     [item["title"] + " " + item["url"] for item in r["results"]]
                     for r in search_results
@@ -126,7 +106,7 @@ class WebSearchService:
             )
 
             result = json.loads(response.choices[0].message.content)
-            print("\n\nresult", result)
+            print("\n\nGenerated Queries:", result)
             filtered_queries = [
                 query
                 for query in result["queries"]

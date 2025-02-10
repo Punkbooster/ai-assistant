@@ -3,7 +3,8 @@ import json
 from app.services.openai_service import OpenAIService
 from app.services.web_search_service import WebSearchService
 from app.prompts.answer_prompt import answer_prompt
-from datetime import datetime
+from app.prompts.generate_params_prompt import generate_params_prompt
+from app.prompts.create_plan_prompt import create_plan_prompt
 
 
 class Agent:
@@ -17,7 +18,7 @@ class Agent:
             # Make a plan
             next_move = await self.plan()
             print("Thinking...", next_move["_reasoning"])
-            print(f"Tool: {next_move['tool']}, Query: {next_move['query']}")
+            print(f"Selected Tool: {next_move['tool']}, Query: {next_move['query']}")
 
             # If there's no tool to use, we're done
             if not next_move["tool"] or next_move["tool"] == "final_answer":
@@ -45,7 +46,7 @@ class Agent:
         return state["messages"][-1]
 
     async def plan(self):
-        system_message = self._generate_plan_system_message()
+        system_message = create_plan_prompt(self.state)
 
         answer = await self.openai_service.completion(
             {
@@ -66,7 +67,7 @@ class Agent:
         if not tool_info:
             raise ValueError(f"Tool {tool} not found")
 
-        system_message = self._generate_describe_system_message(tool_info, query)
+        system_message = generate_params_prompt(self.state, tool_info, query)
 
         answer = await self.openai_service.completion(
             {
@@ -127,88 +128,3 @@ class Agent:
         )
 
         return answer
-
-    def _generate_describe_system_message(self, tool_info, query):
-        return {
-            "role": "system",
-            "content": f"""
-                Generate specific parameters for the "{tool_info['name']}" tool.
-                <context>
-                    <current_date>
-                        Current date: ${datetime.now().isoformat()}
-                    </current_date>
-                    Tool description: {tool_info['description']}
-                    Required parameters: {tool_info['parameters']}
-                    Original query: {query}
-                    Last message: "{self.state["messages"][-1]['content'] if self.state["messages"] else ''}"
-                    Previous actions: {', '.join([f"{a['name']}: {a['parameters']}" for a in self.state["actions"]])}
-                </context>
-
-                Respond with ONLY a JSON object matching the tool's parameter structure.
-                Example for web_search: {{"query": "specific search query"}}
-                Example for final_answer: {{"answer": "detailed response"}}
-            """,
-        }
-
-    def _generate_plan_system_message(self):
-        return {
-            "role": "system",
-            "content": f"""
-                Analyze the conversation and determine the most appropriate next step. Focus on making progress towards the overall goal while remaining adaptable to new information or changes in context.
-
-                <prompt_objective>
-                    Determine the single most effective next action based on the current context, user needs, and overall progress. Return the decision as a concise JSON object.
-                </prompt_objective>
-
-                <prompt_rules>
-                    - ALWAYS focus on determining only the next immediate step
-                    - ONLY choose from the available tools listed in the context
-                    - ASSUME previously requested information is available unless explicitly stated otherwise
-                    - NEVER provide or assume actual content for actions not yet taken
-                    - ALWAYS respond in the specified JSON format
-                    - CONSIDER the following factors when deciding:
-                      1. Relevance to the current user need or query
-                      2. Potential to provide valuable information or progress
-                      3. Logical flow from previous actions
-                    - ADAPT your approach if repeated actions don't yield new results
-                    - USE the "final_answer" tool when you have sufficient information or need user input
-                    - OVERRIDE any default behaviors that conflict with these rules
-                </prompt_rules>
-
-                <context>
-                    <current_date>Current date: ${datetime.now().isoformat()}</current_date>
-                    <last_message>
-                        Last message: "{self.state["messages"][-1]["content"] if self.state["messages"] else 'No messages yet'}"
-                    </last_message>
-                    <available_tools>
-                        Available tools: {', '.join([t['name'] for t in self.state['tools']]) or 'No tools available'}
-                    </available_tools>
-                    <actions_taken>
-                        Actions taken: {
-                            '\n'.join([
-                              f"""
-                                  <action name="{a['name']}" params="{a['parameters']}" description="{a['description']}" >
-                                    {'\n'.join([
-                                      f"""
-                                            <result name="{r['metadata']['name']}" url="{r['metadata'].get('urls', ['no-url'])[0]}" >
-                                              {r['text']}
-                                            </result>
-                                      """ for r in a['results']
-                                    ]) if a['results'] else 'No results for this action'}
-                                  </action>
-                              """ for a in self.state["actions"]
-                            ]) or 'No actions taken'
-                        }
-                    </actions_taken>
-                </context>
-
-                Respond with the next action in this JSON format:
-                {{
-                    "_reasoning": "Brief explanation of why this action is the most appropriate next step",
-                    "tool": "tool_name",
-                    "query": "Precise description of what needs to be done, including any necessary context"
-                }}
-
-                If you have sufficient information to provide a final answer or need user input, use the "final_answer" tool.
-            """,
-        }

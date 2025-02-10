@@ -1,0 +1,22 @@
+ALLOWED_DOMAINS = [
+    {"name": "Wikipedia", "url": "wikipedia.org", "scrappable": True},
+    {"name": "easycart", "url": "easy.tools", "scrappable": True},
+    {"name": "FS.blog", "url": "fs.blog", "scrappable": True},
+    {"name": "arXiv", "url": "arxiv.org", "scrappable": True},
+    {"name": "OpenAI", "url": "openai.com", "scrappable": True},
+    {"name": "Brain overment", "url": "brain.overment.com", "scrappable": True},
+    {"name": "Reuters", "url": "reuters.com", "scrappable": True},
+    {
+        "name": "MIT Technology Review",
+        "url": "technologyreview.com",
+        "scrappable": True,
+    },
+    {"name": "Youtube", "url": "youtube.com", "scrappable": False},
+    {"name": "overment", "url": "brain.overment.com", "scrappable": True},
+    {"name": "Tailwind CSS", "url": "tailwindcss.com", "scrappable": True},
+    {"name": "IMDB", "url": "imdb.com", "scrappable": True},
+    {"name": "TechCrunch", "url": "techcrunch.com", "scrappable": True},
+    {"name": "Hacker", "url": "news.ycombinator.com", "scrappable": True},
+    {"name": "Anthropic", "url": "anthropic.com", "scrappable": True},
+    {"name": "DeepMind Press", "url": "deepmind.google", "scrappable": True},
+]
