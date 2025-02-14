@@ -45,7 +45,7 @@ def create_plan_prompt(state):
                                           {r['text']}
                                         </result>
                                   """ for r in a['results']
-                                ]) if a['results'] else 'No results for this action'}
+                                ]) if a['results'] and isinstance(a['results'], list) else 'No results for this action'}
                               </action>
                           """ for a in state["actions"]
                         ]) or 'No actions taken'

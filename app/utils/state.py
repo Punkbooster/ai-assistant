@@ -3,7 +3,7 @@ import json
 from app.prompts.web_prompt import web_prompt
 
 state = {
-    "config": {"max_steps": 1, "current_step": 0, "active_step": None},
+    "config": {"max_steps": 5, "current_step": 0, "active_step": None},
     "messages": [],
     "conversation_uuid": str(uuid.uuid4()),
     "tools": [
