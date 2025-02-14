@@ -5,7 +5,6 @@ ALLOWED_DOMAINS = [
     {"name": "arXiv", "url": "arxiv.org", "scrappable": True},
     {"name": "OpenAI", "url": "openai.com", "scrappable": True},
     {"name": "Brain overment", "url": "brain.overment.com", "scrappable": True},
-    {"name": "Reuters", "url": "reuters.com", "scrappable": True},
     {
         "name": "MIT Technology Review",
         "url": "technologyreview.com",
