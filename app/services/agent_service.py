@@ -2,6 +2,7 @@ import uuid
 import json
 from app.services.openai_service import OpenAIService
 from app.services.web_search_service import WebSearchService
+from app.services.mailer_service import MailerService
 from app.prompts.answer_prompt import answer_prompt
 from app.prompts.generate_params_prompt import generate_params_prompt
 from app.prompts.create_plan_prompt import create_plan_prompt
@@ -11,6 +12,7 @@ class Agent:
     def __init__(self, state):
         self.openai_service = OpenAIService()
         self.web_search_service = WebSearchService(state["conversation_uuid"])
+        self.mailer_service = MailerService()
         self.state = state
 
     async def process_agent_steps(self, state):
@@ -98,6 +100,33 @@ class Agent:
                     "tool_uuid": tool,
                 }
             )
+        elif tool == "mailer":
+            is_success, result_message = await self.mailer_service.send(
+                recipient_email=parameters["address"], subject=parameters["title"], content=parameters["content"]
+            )
+
+            if is_success == True:
+                self.state["actions"].append(
+                    {
+                        "uuid": str(uuid.uuid4()),
+                        "name": tool,
+                        "parameters": json.dumps(parameters),
+                        "description": f'Sent email to {parameters["address"]} with the subject {parameters["title"]}',
+                        "results": result_message,
+                        "tool_uuid": tool,
+                    }
+                )
+            else:
+                self.state["actions"].append(
+                    {
+                        "uuid": str(uuid.uuid4()),
+                        "name": tool,
+                        "parameters": json.dumps(parameters),
+                        "description": f'Failed to send an email to {parameters["address"]} with the subject {parameters["title"]}',
+                        "results": result_message,
+                        "tool_uuid": tool,
+                    }
+                )
 
     async def generate_answer(self):
         context = []

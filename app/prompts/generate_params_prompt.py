@@ -20,5 +20,6 @@ def generate_params_prompt(state, tool_info, query):
             Respond with ONLY a JSON object matching the tool's parameter structure.
             Example for web_search: {{"query": "specific search query"}}
             Example for final_answer: {{"answer": "detailed response"}}
+            Example for mailer: {{"title": "email subject", "content": "Email body. Make sure to format it as a proper email with courteses like Hello, Best Wises. The sender name should be Arsen Uhliar", "address": "recipient email"}}
         """,
     }

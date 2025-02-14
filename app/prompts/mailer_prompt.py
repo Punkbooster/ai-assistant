@@ -1,4 +1,4 @@
-def web_prompt():
+def mailer_prompt():
     return """
         Generate a concise, self-contained web search query that precisely targets the requested information or resource.
 

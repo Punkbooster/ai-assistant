@@ -3,7 +3,7 @@ import json
 from app.prompts.web_prompt import web_prompt
 
 state = {
-    "config": {"max_steps": 5, "current_step": 0, "active_step": None},
+    "config": {"max_steps": 1, "current_step": 0, "active_step": None},
     "messages": [],
     "conversation_uuid": str(uuid.uuid4()),
     "tools": [
@@ -24,6 +24,19 @@ state = {
             "description": "Use this tool to write a message to the user",
             "instruction": "...",
             "parameters": json.dumps({}),
+        },
+        {
+            "uuid": str(uuid.uuid4()),
+            "name": "mailer",
+            "description": "Use this tool to send an email to a specified address",
+            "instruction": "...",
+            "parameters": json.dumps(
+                {
+                    "title": "The subject line of the email",
+                    "content": "The body content of the email",
+                    "address": "The recipient's email address",
+                }
+            ),
         },
     ],
     "documents": [],

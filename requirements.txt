@@ -8,3 +8,5 @@ langfuse
 black
 aiohttp
 firecrawl-py
+msgraph-sdk
+sendgrid
