@@ -27,17 +27,17 @@ def pick_resources_prompt(resources):
 
         <context name="Filtered Resources">
           {''.join([f'''
-              <resource query="{resource['query']}" domain="{resource['domain']}">
+              <resource query="{{resource['query']}}" domain="{{resource['domain']}}">
                 {''.join(
                     [f'''
                         <result>
-                          <url>{result['url']}</url>
-                          <title>{result['title']}</title>
-                          <description>{result['description']}</description>
+                          <url>{{result['url']}}</url>
+                          <title>{{result['title']}}</title>
+                          <description>{{result['description']}}</description>
                         </result>
                     ''' for result in resource['results']]) if resource['results'] else f'''
                         <result>
-                          <url>{resource['domain']}</url>
+                          <url>{{resource['domain']}}</url>
                           <title>No web search results found</title>
                           <description>This URL does not exist in the web search yet and MUST be loaded.</description>
                         </result>
